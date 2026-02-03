@@ -23,4 +23,3 @@
 ## **ARCHITECTURE**
 ![Architecture](images/architecture.png)
 
-
