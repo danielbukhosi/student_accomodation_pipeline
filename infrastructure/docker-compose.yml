@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+   postgres:
+      image: postgres:15
+      container_name: postgres_warehouse
+      restart: unless-stopped
+      environment:
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      ports:
+       - "5431:5432"
+      volumes:
+        - pgdata:/var/lib/psotgresql/data
+   etl:
+     image: etl-image
+     container_name: etl-container
+     working_dir: /app
+     environment:
+       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+       POSTGRES_USER: ${POSTGRES_USER}
+       POSTGRES_HOST: ${POSTGRES_HOST}
+       POSTGRES_DB: ${POSTGRES_DB}
+       POSTGRES_PORT: ${POSTGRES_PORT}
+     volumes:
+       - ../data:/app/data
+     depends_on:
+      - postgres
+   dbt:
+      image: dbt-tests-image
+      container_name: dbt-tests-container
+      working_dir: /app
+      environment:
+        DBT_PROFILES_DIR: /app
+      volumes:
+        - ../data_test_dbt:/app
+      depends_on:
+        - etl
+
+      
+volumes:
+  pgdata:
+    
+   
+      
+
+

@@ -1,0 +1,8 @@
+.venv
+.env
+logs
+create_tables_oldversion.env
+data_test_dbt/profiles.yml
+alembic.ini
+
+
