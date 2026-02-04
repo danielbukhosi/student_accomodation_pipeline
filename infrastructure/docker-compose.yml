@@ -14,7 +14,7 @@ services:
       volumes:
         - pgdata:/var/lib/psotgresql/data
    etl:
-     image: etl-image
+     image: danielbukhosi/etl-image1
      container_name: etl-container
      working_dir: /app
      environment:
@@ -24,19 +24,28 @@ services:
        POSTGRES_DB: ${POSTGRES_DB}
        POSTGRES_PORT: ${POSTGRES_PORT}
      volumes:
-       - ../data:/app/data
+       - ../data:/app/data # FILES IN HOST AND CONTAINER STAY IN SYNC
      depends_on:
-      - postgres
+      - migrations
    dbt:
-      image: dbt-tests-image
+      image: danielbukhosi/dbt-image1
       container_name: dbt-tests-container
       working_dir: /app
       environment:
         DBT_PROFILES_DIR: /app
       volumes:
-        - ../data_test_dbt:/app
+        - ../data_test_dbt:/app # FILES IN HOST AND CONTAINER STAY IN SYNC
       depends_on:
         - etl
+   migrations:
+      image: danielbukhosi/migrations-image
+      container_name: migrations-container
+      working_dir: /app
+      volumes:
+        - ../migrations:/app/migrations # FILES IN HOST AND CONTAINER STAY IN SYNC
+      depends_on:
+        - postgres
+
 
       
 volumes:
