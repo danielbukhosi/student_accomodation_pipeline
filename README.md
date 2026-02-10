@@ -13,11 +13,17 @@
 - install make(to run commands in the make file, so your systems understand them).
 - (Optional) Install PgAdmin to interacte with your databse visually.
 ## **DEVELOPMENT**
-- **In the terminal of your code editor run**:
-   - **docker build -f Dockerfile.dbt -t dbt-image .**(This builds an image from the file)
-   - **docker build -f Dockerfile.etl -t etl-image .**(This builds an image from the file)
-   - **make workflow**(This command orchestrates the entire workflow, **you run this command to start the pipeline**)
-- **ALL COMMANDS MUST BE RAN FROM THE ROOT FOLDER!**
+- **Download or Copy docker-compose.yml file**:
+   - **.env file with credentials will be sent to user/developer privately .**
+   - **Open docker-compose.yml with VS code, and make sure they are in the same directory with the .env file .**
+   - **In the terminal of the same directory run the following commands:**
+   - **docker compose up -d**(To start the containers/ create them if not exist)
+   - **docker logs (container_name)**(This attaches the logs of the containers on the terminal to see the output)
+   - **docker compose run --rm (service_name) bash**(This lets you get inside a conatiner and interact with it, run commands, check filesystem)
+   - **docker compose run --rm etl bash**(This will be the exact command you will run to interact specifically with the etl container)
+   - AFTER THE COMMAND ABOVE **cd into src folder and run (python main.py)**, this will start the console app
+   - **etl- container or any temp containers created using the image under etl service have the same filesystem as the Project Structure**(app is the root folder instead of STUDENT_ACCOMODATION_PIPELINE)
+   - **MAKE SURE DOCKER DESKTOP IS RUNNING BEFORE ANY STEP ABOVE!**
 ## **USAGE**
 ![Console App](images/pipeline_app.png)
 ## **ARCHITECTURE**
