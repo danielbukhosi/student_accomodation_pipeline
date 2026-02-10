@@ -1,10 +1,18 @@
 import os
 from dotenv import load_dotenv
 import psycopg2
+import logging
 import json
 from pathlib import Path
+import sys
 
 load_dotenv()
+logger = logging.getLogger("LoadToDb")
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter("%(asctime)s-%(name)s-%(levelname)s-%(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 
 class LoadToDb:                      #Parent class
@@ -21,7 +29,7 @@ class Rooms(LoadToDb):
             with open(self.file_path,"r",encoding="utf-8") as f:
                   data = json.load(f)
          else:
-           raise TypeError("You entered the wrong filename, Try rooms.json")
+           raise FileNotFoundError("You entered the wrong filename, Try rooms.json")
          
          try:
             rows: list = [(item['id'],item['name']) for item in data]
@@ -34,8 +42,8 @@ class Rooms(LoadToDb):
                   """
                self.cu.execute(sql,row)
                self.conn.commit()
-         except Exception as e:
-            print("Insertion or Update into rooms table failed!",e)
+         except Exception:
+            logger.error("Insertion or Update into rooms table failed!",exc_info=True)
 
 
 class Students(LoadToDb):
@@ -44,7 +52,7 @@ class Students(LoadToDb):
             with open(self.file_path,"r",encoding="utf-8") as f:
                data = json.load(f)
           else:
-            raise TypeError("You entered the wrong filename, Try students.json")
+            raise FileNotFoundError("You entered the wrong filename, Try students.json")
           try :
             rows: list = [(item['id'],item['name'],item['room'],item['birthday'],item['sex'] ) for item in data]
             for row in rows:
@@ -57,15 +65,16 @@ class Students(LoadToDb):
                self.cu.execute(sql,row)
                self.conn.commit()
           except Exception as e :
-              print("Insertion or Update into students table failed!",e)
+              logger.error("Insertion or Update into students table failed!",exc_info=True)
 
 def main() -> None:
-  user_name:str = input("Please Register a once-of username$")
+
+  user_name:str = input("Please Register a once-of username$ ")
   if user_name:
      print(f"Hello {user_name.strip()}!. Welcome to the ETL")
   students_filename:str = " "
   while students_filename != "students.json":
-    students_filename:str = input("Enter Students file name with extention(.json)$")
+    students_filename:str = input("Enter Students file name with extention(.json)$ ")
     if students_filename == "students.json":
        break
     else:
@@ -73,13 +82,13 @@ def main() -> None:
     
   rooms_filename:str  = " "
   while rooms_filename != "rooms.json":
-     rooms_filename:str  = input("Enter Rooms file name with extention(.json)$")
+     rooms_filename:str  = input("Enter Rooms file name with extention(.json)$ ")
      if rooms_filename == "rooms.json":
         break
      else:
         print("You entered the wrong rooms filename.Try rooms.json")
-  print("Starting to insert/update data....🧑‍💻")   
-  BASE_DIR = Path(__file__).parent                                     
+  logger.info("Starting to insert/update data....🧑‍💻")   
+  BASE_DIR = Path(__file__).parent.parent                                     
   students_filepath = BASE_DIR/"data"/"raw_json"/students_filename.lower().strip()
   rooms_filepath = BASE_DIR/"data"/"raw_json"/ rooms_filename.lower().strip()
   
@@ -94,16 +103,15 @@ def main() -> None:
    conn = psycopg2.connect(**credentials)
    cur = conn.cursor()
   except Exception as e:
-     print("Driver could not connect to Database!",e)
+     logger.error("Driver could not connect to Database!",exc_info=True)
+     return
   
   Rooms(rooms_filepath,conn,cur).load_data(rooms_filepath)
   Students(students_filepath,conn,cur).load_data(students_filepath)
   cur.close()
   conn.close()
-  print("Data inserted/updated successfully to rooms and students table!✅")
+  logger.info("Data inserted/updated successfully to rooms and students table!✅")
         
-
-
 if __name__ == "__main__":
     main()
     

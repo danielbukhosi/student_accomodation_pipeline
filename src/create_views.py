@@ -1,8 +1,16 @@
 import psycopg2
 from dotenv import load_dotenv
+import logging
+import sys
 import os
 
 load_dotenv()
+logger =  logging.getLogger("CreateViews")
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter("%(asctime)s-%(name)s-%(levelname)s-%(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 class CreateViews:
   def __init__(self,con,cu):
@@ -17,7 +25,7 @@ class NumberOfStudentsInRoomsView(CreateViews):
           sql: str = """
               
               CREATE OR REPLACE VIEW NumberOfStudentsInRooms AS
-              SELECT room_id AS room,
+              SELECT DISTINCT room_id AS room,
                     count(student_id) AS students_count
               FROM students
               GROUP BY room
@@ -26,14 +34,14 @@ class NumberOfStudentsInRoomsView(CreateViews):
           self.cu.execute(sql)
           self.con.commit()
       except Exception as e:
-         print("Could not Create views in DataBase!, alter1", e)
+         logger.error("Could not Create views in DataBase!, alter1", exc_info=True)
 
 class RoomsWithSmallestAvgAgeView(CreateViews):
    def create_views(self) -> None:
        try:
             sql:str = """
                       CREATE OR REPLACE VIEW RoomsWithSmallestAvgAGe AS
-                      SELECT room_id AS room,
+                      SELECT DISTINCT room_id AS room,
                             ROUND(AVG(2026-(EXTRACT(YEAR FROM birthday))),2) as avg_student_age
                       FROM students
                       GROUP BY room
@@ -42,14 +50,14 @@ class RoomsWithSmallestAvgAgeView(CreateViews):
             self.cu.execute(sql)
             self.con.commit()
        except Exception  as e:
-          print("Could not Create Views in DataBase!, alert2", e)
+          logger.error("Could not Create Views in DataBase!, alert2", exc_info=True)
 
 class RoomsWithLargestAgeDiffView(CreateViews):
    def create_views(self) -> None:
        try:
             sql: str = """
                       CREATE OR REPLACE VIEW RoomsWithTheLargestAgeDiff AS
-                      SELECT room_id AS room,
+                      SELECT DISTINCT room_id AS room,
                             ROUND(STDDEV_POP(2026-EXTRACT(YEAR FROM birthday)),2) AS student_age_diff
                       FROM students
                       GROUP BY room
@@ -58,7 +66,7 @@ class RoomsWithLargestAgeDiffView(CreateViews):
             self.cu.execute(sql)
             self.con.commit()
        except Exception  as e:
-          print("Could not Create Views in DataBase!, alert3", e)
+          logger.error("Could not Create Views in DataBase!, alert3", exc_info=True)
 
 
 class RoomsWithDiffSexStudentsView(CreateViews):
@@ -85,10 +93,10 @@ class RoomsWithDiffSexStudentsView(CreateViews):
             self.cu.execute(sql)
             self.con.commit()
        except Exception  as e:
-          print("Could not Create Views in DataBase!, alert4", e)
+          logger.error("Could not Create Views in DataBase!, alert4", exc_infor=True)
 
 def main()-> None:
-   print("Starting to Create views...")
+   logger.info("Starting to Create views...")
    try:
       credentials = {"password":os.getenv("POSTGRES_PASSWORD"),
                   "dbname":os.getenv("POSTGRES_DB"),
@@ -100,7 +108,8 @@ def main()-> None:
       conn = psycopg2.connect(**credentials)
       cur = conn.cursor()
    except Exception as e:
-     print("Could not connect to Database!", e)
+     logger.error("Could not connect to Database!", exc_info=True)
+     return
     
    NumberOfStudentsInRoomsView(conn,cur).create_views()
    RoomsWithSmallestAvgAgeView(conn,cur).create_views()
@@ -109,7 +118,7 @@ def main()-> None:
 
    cur.close()
    conn.close()
-   print("Views created successfully✅")
+   logger.info("Views created successfully✅")
 
 
 if __name__ == "__main__":
