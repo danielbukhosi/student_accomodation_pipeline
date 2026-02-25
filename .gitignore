@@ -2,7 +2,10 @@
 .env
 logs
 create_tables_oldversion.env
-data_test_dbt/profiles.yml
 alembic.ini
+data_test_dbt/profiles.yml
+data_test_dbt/.user.yml
+src/__pychace__/
+src/.ruff_cache/
 
 
