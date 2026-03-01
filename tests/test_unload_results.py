@@ -1,340 +1,142 @@
+import json
+import sys
 import pytest
-from src.unload_results import NumberOfStudentsInRoomsJ,RoomsWithDiffSexStudentsJ,RoomsWithLargestAgeDiffJ,RoomsWithSmallestAvgAgeJ
-from src.unload_results import NumberOfStudentsInRoomsX,RoomsWithDiffSexStudentsX,RoomsWithLargestAgeDiffX,RoomsWithSmallestAvgAgeX
-from src.unload_results import main
+from unittest.mock import MagicMock, patch
+from io import StringIO
+
+import src.unload_results
+
+
+# =====================================================
+# FIXTURES
+# =====================================================
 
 @pytest.fixture
-def mock_conn(mocker):
-    yield mocker.MagicMock()
+def mock_db():
+    db = MagicMock(spec=src.unload_results.PostgresClient)
+    return db
+
 
 @pytest.fixture
-def mock_cur(mocker, mock_conn):
-    mock_cur = mocker.MagicMock()
-    mock_conn.cursor.return_value = mock_cur
-    yield mock_cur
-
-@pytest.fixture
-def mock_NumberOfStudentsInRoomsJ(mock_conn,mock_cur):
-    return NumberOfStudentsInRoomsJ(con=mock_conn,cu=mock_cur)
-
-@pytest.fixture
-def mock_RoomsWithDiffSexStudentsJ(mock_conn,mock_cur):
-    return RoomsWithDiffSexStudentsJ(con=mock_conn,cu=mock_cur)
-
-@pytest.fixture
-def mock_RoomsWithLargestAgeDiffJ(mock_conn,mock_cur):
-    return RoomsWithLargestAgeDiffJ(con=mock_conn,cu=mock_cur)
-
-@pytest.fixture
-def mock_RoomsWithSmallestAvgAgeJ(mock_conn,mock_cur):
-    return RoomsWithSmallestAvgAgeJ(con=mock_conn,cu=mock_cur)
-
-@pytest.fixture
-def mock_NumberOfStudentsInRoomsX(mock_conn,mock_cur):
-    return NumberOfStudentsInRoomsX(con=mock_conn,cu=mock_cur)
-
-@pytest.fixture
-def mock_RoomsWithDiffSexStudentsX(mock_conn,mock_cur):
-    return RoomsWithDiffSexStudentsX(con=mock_conn,cu=mock_cur)
-
-@pytest.fixture
-def mock_RoomsWithLargestAgeDiffX(mock_conn,mock_cur):
-    return RoomsWithLargestAgeDiffX(con=mock_conn,cu=mock_cur)
-
-@pytest.fixture
-def mock_RoomsWithSmallestAvgAgeX(mock_conn,mock_cur):
-    return RoomsWithSmallestAvgAgeX(con=mock_conn,cu=mock_cur)
-
-@pytest.fixture
-def mock_logger(mocker):
-    return mocker.patch("src.unload_results.logger")
-
-@pytest.fixture
-def mock_json(mocker):
-    return mocker.patch("src.unload_results.json")
-
-@pytest.fixture
-def mock_sys(mocker):
-    return mocker.patch("src.unload_results.sys")
-
-@pytest.fixture
-def mock_db(mocker):
-    mock_conn = mocker.MagicMock()
-    mock_cur = mocker.MagicMock()
-    mocker.patch("src.unload_results.psycopg2.connect", return_value=mock_conn)
-    mock_conn.cursor.return_value = mock_cur
-    return mock_conn, mock_cur
-
-def test_NumberOfStudentsInRoomsJ(mock_conn,mock_cur,mock_NumberOfStudentsInRoomsJ,mock_logger,mock_json):
-    mock_NumberOfStudentsInRoomsJ.unload_to_json()
-    mock_cur.execute.assert_called_once_with(
-        
-                                                 """
-            SELECT * FROM NumberOfStudentsInRooms
-
-          """
-    )
-    mock_conn.commit.assert_called_once()
-    mock_json.dump.assert_called_once()
-    mock_logger.info.assert_called_once()
-    mock_logger.error.assert_not_called()
-
-def test_NumberOfStudentsInRoomsJ_failure(mock_conn,mock_cur,mock_NumberOfStudentsInRoomsJ,mock_logger,mock_json):
-    mock_cur.execute.side_effect = Exception("DB ERROR")    # FORCING AN ERROR
-    mock_json.dump.side_effect = Exception("Type Error")    # FORCING AN ERROR
-    mock_NumberOfStudentsInRoomsJ.unload_to_json()
-    mock_conn.commit.assert_not_called()
-    mock_logger.info.assert_not_called()
-    assert mock_logger.error.call_count == 2
-
-def test_RoomsWithLargestAgeDiffJ(mock_conn,mock_cur,mock_RoomsWithLargestAgeDiffJ,mock_logger,mock_json):
-    mock_RoomsWithLargestAgeDiffJ.unload_to_json()
-    mock_cur.execute.assert_called_once_with(
-        
-                                               """
-            SELECT * FROM RoomsWithTheLargestAgeDiff
-            LIMIT 5
-
-          """
-    )
-    mock_conn.commit.assert_called_once()
-    mock_json.dump.assert_called_once()
-    mock_logger.info.assert_called_once()
-    mock_logger.error.assert_not_called()
-
-def test_RoomsWithLargestAgeDiffJ_failure(mock_conn,mock_cur,mock_RoomsWithLargestAgeDiffJ,mock_logger,mock_json):
-    mock_cur.execute.side_effect = Exception("DB ERROR")    # FORCING AN ERROR
-    mock_json.dump.side_effect = Exception("Type Error")    # FORCING AN ERROR
-    mock_RoomsWithLargestAgeDiffJ.unload_to_json()
-    mock_conn.commit.assert_not_called()
-    mock_logger.info.assert_not_called()
-    assert mock_logger.error.call_count == 2
-
-def test_RoomsWithDiffSexStudentsJ(mock_conn,mock_cur,mock_RoomsWithDiffSexStudentsJ,mock_logger,mock_json):
-    mock_RoomsWithDiffSexStudentsJ.unload_to_json()
-    mock_cur.execute.assert_called_once_with(
-        
-                                  """
-            SELECT DISTINCT diff_sex_rooms FROM RoomsWithDiffSexStudents
-
-          """
-    )
-    mock_conn.commit.assert_called_once()
-    mock_json.dump.assert_called_once()
-    mock_logger.info.assert_called_once()
-    mock_logger.error.assert_not_called()
-
-def test_RoomsWithDiffSexStudentsJ_failure(mock_conn,mock_cur,mock_RoomsWithDiffSexStudentsJ,mock_logger,mock_json):
-    mock_cur.execute.side_effect = Exception("DB ERROR")    # FORCING AN ERROR
-    mock_json.dump.side_effect = Exception("Type Error")    # FORCING AN ERROR
-    mock_RoomsWithDiffSexStudentsJ.unload_to_json()
-    mock_conn.commit.assert_not_called()
-    mock_logger.info.assert_not_called()
-    assert mock_logger.error.call_count == 2
-
-def test_RoomsWithSmallestAvgAgeJ(mock_conn,mock_cur,mock_RoomsWithSmallestAvgAgeJ,mock_logger,mock_json):
-    mock_RoomsWithSmallestAvgAgeJ.unload_to_json()
-    mock_cur.execute.assert_called_once_with(
-        
-            """
-            SELECT * FROM RoomsWithSmallestAvgAge
-            LIMIT 5
-
-          """
-    )
-    mock_conn.commit.assert_called_once()
-    mock_json.dump.assert_called_once()
-    mock_logger.info.assert_called_once()
-    mock_logger.error.assert_not_called()
-
-def test_RoomsWithSmallestAvgAgeJ_failure(mock_conn,mock_cur,mock_RoomsWithSmallestAvgAgeJ,mock_logger,mock_json):
-    mock_cur.execute.side_effect = Exception("DB ERROR")    # FORCING AN ERROR
-    mock_json.dump.side_effect = Exception("Type Error")    # FORCING AN ERROR
-    mock_RoomsWithSmallestAvgAgeJ.unload_to_json()
-    mock_conn.commit.assert_not_called()
-    mock_logger.info.assert_not_called()
-    assert mock_logger.error.call_count == 2
-
-def test_NumberOfStudentsInRoomsX(mock_conn,mock_cur,mock_NumberOfStudentsInRoomsX,mock_logger,mock_sys):
-    mock_NumberOfStudentsInRoomsX.unload_to_xml()
-    mock_cur.execute.assert_called_once_with(
-        
-             """
-            SELECT * FROM NumberOfStudentsInRooms
-          """
-    )
-    mock_conn.commit.assert_called_once()
-    mock_sys.stdout.write.assert_called_once()
-    mock_logger.info.assert_called_once()
-    mock_logger.error.assert_not_called()
-
-def test_NumberOfStudentsInRoomsX_failure(mock_conn,mock_cur,mock_NumberOfStudentsInRoomsX,mock_logger,mock_sys):
-    mock_cur.execute.side_effect = Exception("DB ERROR")    # FORCING AN ERROR
-    mock_sys.stdout.write.side_effect = Exception("Type Error")    # FORCING AN ERROR
-    mock_NumberOfStudentsInRoomsX.unload_to_xml()
-    mock_conn.commit.assert_not_called()
-    mock_logger.info.assert_not_called()
-    assert mock_logger.error.call_count == 2
-
-def test_RoomWithLargestAgeDiffsX(mock_conn,mock_cur,mock_RoomsWithLargestAgeDiffX,mock_logger,mock_sys):
-    mock_RoomsWithLargestAgeDiffX.unload_to_xml()
-    mock_cur.execute.assert_called_once_with(
-                                                """
-            SELECT * FROM RoomsWithTheLargestAgeDiff
-            LIMIT 5
-           """
-    )
-    mock_conn.commit.assert_called_once()
-    mock_sys.stdout.write.assert_called_once()
-    mock_logger.info.assert_called_once()
-    mock_logger.error.assert_not_called()
-
-def test_RoomsWithLargestAgeDiffX_failure(mock_conn,mock_cur,mock_RoomsWithLargestAgeDiffX,mock_logger,mock_sys):
-    mock_cur.execute.side_effect = Exception("DB ERROR")    # FORCING AN ERROR
-    mock_sys.stdout.write.side_effect = Exception("Type Error")    # FORCING AN ERROR
-    mock_RoomsWithLargestAgeDiffX.unload_to_xml()
-    mock_conn.commit.assert_not_called()
-    mock_logger.info.assert_not_called()
-    assert mock_logger.error.call_count == 2
+def service(mock_db):
+    return src.unload_results.RoomAnalyticsService(mock_db)
 
 
-def test_RoomWithDiffSexStudentsX(mock_conn,mock_cur,mock_RoomsWithDiffSexStudentsX,mock_logger,mock_sys):
-    mock_RoomsWithDiffSexStudentsX.unload_to_xml()
-    mock_cur.execute.assert_called_once_with(
-                                                   """
-            SELECT DISTINCT diff_sex_rooms FROM RoomsWithDiffSexStudents
-           """
-    )
-    mock_conn.commit.assert_called_once()
-    mock_sys.stdout.write.assert_called_once()
-    mock_logger.info.assert_called_once()
-    mock_logger.error.assert_not_called()
+# =====================================================
+# DATABASE LAYER TESTS
+# =====================================================
 
-def test_RoomsWithDiffSexStudentsX_failure(mock_conn,mock_cur,mock_RoomsWithDiffSexStudentsX,mock_logger,mock_sys):
-    mock_cur.execute.side_effect = Exception("DB ERROR")    # FORCING AN ERROR
-    mock_sys.stdout.write.side_effect = Exception("Type Error")    # FORCING AN ERROR
-    mock_RoomsWithDiffSexStudentsX.unload_to_xml()
-    mock_conn.commit.assert_not_called()
-    mock_logger.info.assert_not_called()
-    assert mock_logger.error.call_count == 2
+def test_fetch_all_executes_query():
+    db = src.unload_results.PostgresClient()
+    db.cur = MagicMock()
+    db.cur.fetchall.return_value = [("A", 10)]
 
-def test_RoomWithSmallestAvgAgeX(mock_conn,mock_cur,mock_RoomsWithSmallestAvgAgeX,mock_logger,mock_sys):
-    mock_RoomsWithSmallestAvgAgeX.unload_to_xml()
-    mock_cur.execute.assert_called_once_with(
-                                                """
-            SELECT * FROM RoomsWithSmallestAvgAge
-            LIMIT 5
-           """
-    )
-    mock_conn.commit.assert_called_once()
-    mock_sys.stdout.write.assert_called_once()
-    mock_logger.info.assert_called_once()
-    mock_logger.error.assert_not_called()
+    result = db.fetch_all("SELECT 1")
 
-def test_RoomsWithSmallestAvgAgeX_failure(mock_conn,mock_cur,mock_RoomsWithSmallestAvgAgeX,mock_logger,mock_sys):
-    mock_cur.execute.side_effect = Exception("DB ERROR")    # FORCING AN ERROR
-    mock_sys.stdout.write.side_effect = Exception("Type Error")    # FORCING AN ERROR
-    mock_RoomsWithSmallestAvgAgeX.unload_to_xml()
-    mock_conn.commit.assert_not_called()
-    mock_logger.info.assert_not_called()
-    assert mock_logger.error.call_count == 2
-
-# ---------------------------------------------------------
-# Test 1: JSON mode, dataset 1 selected
-# ---------------------------------------------------------
-def test_main_json_dataset_1(mocker, mock_db):
-    mock_conn, mock_cur = mock_db
-
-    # Mock dataset class
-    mock_num = mocker.patch("src.unload_results.NumberOfStudentsInRoomsJ")
-
-    # Silence print()
-    mocker.patch("src.unload_results.print")
-
-    # Provide enough inputs to avoid StopIteration
-    mocker.patch(
-        "src.unload_results.input",
-        side_effect=[
-            "json",   # choose JSON mode
-            "1",      # dataset 1
-            "x",      # dataset 2
-            "x",      # dataset 3
-            "x",      # dataset 4
-            "x",      # all datasets
-            "exit",   # exit loop
-            "exit"    # extra exit for safety
-        ]
-    )
-
-    main()
-
-    # Assert dataset 1 JSON class was used
-    mock_num.assert_called_once_with(mock_conn, mock_cur)
-    mock_num.return_value.unload_to_json.assert_called_once()
+    db.cur.execute.assert_called_once_with("SELECT 1")
+    assert result == [("A", 10)]
 
 
-# ---------------------------------------------------------
-# Test 2: XML mode, dataset 2 selected
-# ---------------------------------------------------------
-def test_main_xml_dataset_2(mocker, mock_db):
-    mock_conn, mock_cur = mock_db
+def test_close_closes_resources():
+    db = src.unload_results.PostgresClient()
+    db.cur = MagicMock()
+    db.conn = MagicMock()
 
-    mock_diffsexX = mocker.patch("src.unload_results.RoomsWithDiffSexStudentsX")
-    mocker.patch("src.unload_results.print")
+    db.close()
 
-    mocker.patch(
-        "src.unload_results.input",
-        side_effect=[
-            # LOOP 1
-            "x",       # JSON prompt → skip JSON
-            "xml",     # XML prompt → enter XML mode
-            "x",       # dataset 1
-            "2",       # dataset 2
-            "x",       # dataset 3
-            "x",       # dataset 4
-
-            # LOOP 2 (clean exit)
-            "exit",    # Xml prompt
-            "exit"  
-                 # exit prompt
-        ]
-    )
-
-    main()
-
-    mock_diffsexX.assert_called_once_with(mock_conn, mock_cur)
-    mock_diffsexX.return_value.unload_to_xml.assert_called_once()
+    db.cur.close.assert_called_once()
+    db.conn.close.assert_called_once()
 
 
-# ---------------------------------------------------------
-# Test 3: DB connection failure logs an error
-# ---------------------------------------------------------
-def test_main_connection_failure(mocker):
-    mock_logger = mocker.patch("src.unload_results.logger")
+# =====================================================
+# SERVICE LAYER TESTS
+# =====================================================
 
-    # Force connection failure
-    mocker.patch("src.unload_results.psycopg2.connect", side_effect=Exception("DB DOWN"))
+def test_number_of_students(service, mock_db):
+    mock_db.fetch_all.return_value = [("Room1", 3)]
 
-    # Ensure loop exits immediately
-    mocker.patch("src.unload_results.input", return_value="exit")
+    result = service.number_of_students()
 
-    main()
-
-    mock_logger.error.assert_called()
+    mock_db.fetch_all.assert_called_once()
+    assert result == [{"Room": "Room1", "StudentCount": 3}]
 
 
-# ---------------------------------------------------------
-# Test 4: Immediate exit (no datasets called)
-# ---------------------------------------------------------
-def test_main_exit_immediately(mocker, mock_db):
-    mock_conn, mock_cur = mock_db
+def test_rooms_with_diff_sex(service, mock_db):
+    mock_db.fetch_all.return_value = [("Room2",)]
 
-    mocker.patch("src.unload_results.print")
-    mocker.patch("src.unload_results.input", return_value="exit")
+    result = service.rooms_with_diff_sex()
 
-    main()
+    assert result == [{"Room": "Room2"}]
 
-    # Cursor created once, no dataset classes called
-    mock_conn.cursor.assert_called_once()
 
-  
+def test_rooms_with_largest_age_diff(service, mock_db):
+    mock_db.fetch_all.return_value = [("Room3", 12)]
+
+    result = service.rooms_with_largest_age_diff()
+
+    assert result == [{"Room": "Room3", "StudentAgeDiff": 12.0}]
+
+
+def test_rooms_with_smallest_avg_age(service, mock_db):
+    mock_db.fetch_all.return_value = [("Room4", 18)]
+
+    result = service.rooms_with_smallest_avg_age()
+
+    assert result == [{"Room": "Room4", "AvgStudentAge": 18.0}]
+
+
+# =====================================================
+# EXPORTER TESTS
+# =====================================================
+
+def test_to_json_outputs_valid_json(capsys):
+    data = [{"Room": "A", "StudentCount": 2}]
+
+    src.unload_results.DataExporter.to_json(data)
+
+    captured = capsys.readouterr()
+    parsed = json.loads(captured.out)
+
+    assert parsed == data
+
+
+def test_to_xml_outputs_valid_xml(capsys):
+    data = [{"Room": "A", "StudentCount": 2}]
+
+    src.unload_results.DataExporter.to_xml(data, root_name="TestRoot")
+
+    captured = capsys.readouterr()
+
+    assert "<TestRoot>" in captured.out
+    assert "<Room>A</Room>" in captured.out
+    assert "<StudentCount>2</StudentCount>" in captured.out
+
+
+# =====================================================
+# MAIN FLOW TEST
+# =====================================================
+
+@patch("src.unload_results.PostgresClient")
+@patch("src.unload_results.RoomAnalyticsService")
+@patch("src.unload_results.DataExporter")
+def test_main_flow(mock_exporter_cls, mock_service_cls, mock_db_cls, monkeypatch):
+    """
+    Tests:
+    - user selects json
+    - selects dataset 1
+    - then exits
+    """
+
+    # Mock input sequence
+    inputs = iter(["json", "1", "exit"])
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+
+    # Mock service behavior
+    mock_service = mock_service_cls.return_value
+    mock_service.number_of_students.return_value = [{"Room": "A", "StudentCount": 2}]
+
+    src.unload_results.main()
+
+    mock_service.number_of_students.assert_called_once()
+    mock_exporter_cls.return_value.to_json.assert_called_once()
+    mock_db_cls.return_value.close.assert_called_once()
