@@ -5,7 +5,8 @@ create_tables_oldversion.env
 alembic.ini
 data_test_dbt/profiles.yml
 data_test_dbt/.user.yml
-src/__pychace__/
+src/__pycache__
 src/.ruff_cache/
+src/unload_results2.py
 
 
