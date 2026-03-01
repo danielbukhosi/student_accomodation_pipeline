@@ -9,5 +9,6 @@ src/__pycache__
 src/.ruff_cache/
 src/unload_results2.py
 migrations/__pycache__
+migrations/versions/__pycache__
 
 
