@@ -1,6 +1,6 @@
 import psycopg2
 from dotenv import load_dotenv
-from logs import create_views_log
+from .logs import create_views_log
 import os
 
 load_dotenv()

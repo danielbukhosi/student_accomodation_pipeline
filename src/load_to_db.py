@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 import psycopg2
-from logs import load_to_db_log 
+from .logs import load_to_db_log 
 import json
 from pathlib import Path
 
@@ -25,23 +25,29 @@ class LoadToDb:                      #Parent class
          else:
            raise FileNotFoundError(f"You entered the wrong filename, Try {self.table_name}.json")
          
+class Rooms(LoadToDb):               
+      def load_data(self) -> None:
+         super().load_data()
+         self.rows = [(item['id'],item['name']) for item in self.data]
          try:
             for row in self.rows:
                self.cu.execute(self.sql,row)
                self.conn.commit()
          except Exception:
             logger.error(f"Insertion or Update into {self.table_name} table failed!",exc_info=True)
-   
-class Rooms(LoadToDb):               
-      def load_data(self) -> None:
-         self.rows = [(item['id'],item['name']) for item in self.data]
-         super().load_data()
 
 
 class Students(LoadToDb):
       def load_data(self) -> None:
-         self.rows =  [(item['id'],item['name'],item['room'],item['birthday'],item['sex'] ) for item in self.data]
          super().load_data()
+         self.rows =  [(item['id'],item['name'],item['room'],item['birthday'],item['sex'] ) for item in self.data]
+         try:
+            for row in self.rows:
+               self.cu.execute(self.sql,row)
+               self.conn.commit()
+         except Exception:
+            logger.error(f"Insertion or Update into {self.table_name} table failed!",exc_info=True)
+
 
 def main() -> None:
 

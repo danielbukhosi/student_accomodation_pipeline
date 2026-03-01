@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as md
 
-from logs import unload_results_log
+from .logs import unload_results_log
 
 load_dotenv()
 logger = unload_results_log()
