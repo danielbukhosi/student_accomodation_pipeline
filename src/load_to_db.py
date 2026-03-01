@@ -1,71 +1,47 @@
 import os
 from dotenv import load_dotenv
 import psycopg2
-import logging
+from logs import load_to_db_log 
 import json
 from pathlib import Path
-import sys
+
 
 load_dotenv()
-logger = logging.getLogger("LoadToDb")
-handler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter("%(asctime)s-%(name)s-%(levelname)s-%(message)s")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
-
+logger = load_to_db_log()
 
 class LoadToDb:                      #Parent class
-   def __init__(self,file_path,con,cu):
+   def __init__(self,file_path,con,cu,rows,sql,table_name,data):
       self.file_path = file_path
       self.conn = con
       self.cu = cu
+      self.rows = rows
+      self.sql = sql
+      self.table_name = table_name
+      self.data = data # this is where we are going to unload the contents in the json file to e.g [{"id":122,"name":"Daniel"},{....},..]
    def load_data(self) -> None:
-      pass
-   
-class Rooms(LoadToDb):               
-      def load_data(self,file_path) -> None:
-         if self.file_path == file_path:
+         if self.file_path:
             with open(self.file_path,"r",encoding="utf-8") as f:
-                  data = json.load(f)
+                  self.data = json.load(f)
          else:
-           raise FileNotFoundError("You entered the wrong filename, Try rooms.json")
+           raise FileNotFoundError(f"You entered the wrong filename, Try {self.table_name}.json")
          
          try:
-            rows: list = [(item['id'],item['name']) for item in data]
-            for row in rows:
-               sql:str = """
-                     INSERT INTO rooms(room_id,name)
-                     VALUES(%s,%s)
-                     ON CONFLICT (room_id) DO UPDATE
-                     SET room_id = EXCLUDED.room_id;
-                  """
-               self.cu.execute(sql,row)
+            for row in self.rows:
+               self.cu.execute(self.sql,row)
                self.conn.commit()
          except Exception:
-            logger.error("Insertion or Update into rooms table failed!",exc_info=True)
+            logger.error(f"Insertion or Update into {self.table_name} table failed!",exc_info=True)
+   
+class Rooms(LoadToDb):               
+      def load_data(self) -> None:
+         self.rows = [(item['id'],item['name']) for item in self.data]
+         super().load_data()
 
 
 class Students(LoadToDb):
-      def load_data(self,file_path) -> None:
-          if self.file_path == file_path:
-            with open(self.file_path,"r",encoding="utf-8") as f:
-               data = json.load(f)
-          else:
-            raise FileNotFoundError("You entered the wrong filename, Try students.json")
-          try :
-            rows: list = [(item['id'],item['name'],item['room'],item['birthday'],item['sex'] ) for item in data]
-            for row in rows:
-               sql:str = """
-                     INSERT INTO students(student_id,name,room_id,birthday,sex)
-                     VALUES(%s,%s,%s,%s,%s)
-                     ON CONFLICT (student_id) DO UPDATE
-                     SET student_id = EXCLUDED.student_id;
-                  """
-               self.cu.execute(sql,row)
-               self.conn.commit()
-          except Exception as e :
-              logger.error("Insertion or Update into students table failed!",exc_info=True)
+      def load_data(self) -> None:
+         self.rows =  [(item['id'],item['name'],item['room'],item['birthday'],item['sex'] ) for item in self.data]
+         super().load_data()
 
 def main() -> None:
 
@@ -91,6 +67,23 @@ def main() -> None:
   BASE_DIR = Path(__file__).parent.parent                                     
   students_filepath = BASE_DIR/"data"/"raw_json"/students_filename.lower().strip()
   rooms_filepath = BASE_DIR/"data"/"raw_json"/ rooms_filename.lower().strip()
+  data: list = []
+  rooms_rows: list = []
+  students_rows:list = []
+  rooms_sql:str = """
+                     INSERT INTO rooms(room_id,name)
+                     VALUES(%s,%s)
+                     ON CONFLICT (room_id) DO UPDATE
+                     SET room_id = EXCLUDED.room_id;
+                  """       
+  students_sql:str = """
+                     INSERT INTO students(student_id,name,room_id,birthday,sex)
+                     VALUES(%s,%s,%s,%s,%s)
+                     ON CONFLICT (student_id) DO UPDATE
+                     SET student_id = EXCLUDED.student_id;
+                  """ 
+  rooms_table = "rooms"
+  students_table = "students"     
   
   try:
    credentials = {"dbname":os.getenv("POSTGRES_DB"),
@@ -106,15 +99,11 @@ def main() -> None:
      logger.error("Driver could not connect to Database!",exc_info=True)
      return
   
-  Rooms(rooms_filepath,conn,cur).load_data(rooms_filepath)
-  Students(students_filepath,conn,cur).load_data(students_filepath)
+  Rooms(rooms_filepath,conn,cur,rooms_rows,rooms_sql,rooms_table,data).load_data()
+  Students(students_filepath,conn,cur,students_rows,students_sql,students_table,data).load_data()
   cur.close()
   conn.close()
   logger.info("Data inserted/updated successfully to rooms and students table!✅")
         
 if __name__ == "__main__":
     main()
-    
-
-                 
-          
