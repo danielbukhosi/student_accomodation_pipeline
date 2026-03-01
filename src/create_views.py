@@ -3,6 +3,11 @@ from dotenv import load_dotenv
 from .logs import create_views_log
 import os
 
+try:
+    from .logs import create_views_log  # when imported as package
+except ImportError:
+    from logs import create_views_log   # when run directly as script
+
 load_dotenv()
 logger =  create_views_log()
 

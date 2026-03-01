@@ -1,9 +1,13 @@
 import os
 from dotenv import load_dotenv
 import psycopg2
-from .logs import load_to_db_log 
 import json
 from pathlib import Path
+
+try:
+    from .logs import load_to_db_log  # when imported as package
+except ImportError:
+    from logs import load_to_db_log   # when run directly as script
 
 
 load_dotenv()
