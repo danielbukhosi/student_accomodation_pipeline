@@ -10,5 +10,6 @@ src/.ruff_cache/
 src/unload_results2.py
 migrations/__pycache__
 migrations/versions/__pycache__
+tests/__pycache__
 
 
