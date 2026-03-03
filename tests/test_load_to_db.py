@@ -83,7 +83,6 @@ def test_rooms_load_transforms_and_inserts(mock_file, mock_db):
     loader.load_data()
 
     cur.execute.assert_called_once_with(sql, (1, "RoomA"))
-    conn.commit.assert_called_once()
 
 
 @patch("builtins.open", new_callable=mock_open, read_data='[{"id":1,"name":"RoomA"}]')
@@ -135,7 +134,6 @@ def test_students_load_transforms_and_inserts(mock_file, mock_db):
         sql,
         (1, "Dan", 2, "2000-01-01", "M")
     )
-    conn.commit.assert_called_once()
 
 
 @patch("builtins.open", new_callable=mock_open,
@@ -181,7 +179,7 @@ def test_main_success(mock_connect, monkeypatch):
 
     with patch("builtins.open", mock_open(read_data="[]")):
         load_to_db.main()
-
+    mock_conn.commit.assert_called_once()
     mock_cur.close.assert_called_once()
     mock_conn.close.assert_called_once()
 
