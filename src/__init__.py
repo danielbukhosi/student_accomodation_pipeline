@@ -1,4 +1,4 @@
-from .load_to_db import Rooms, Students
+from .load_to_db import Rooms, Students, main as load_to_db_main
 from .create_views import (
     NumberOfStudentsInRoomsView,
     RoomsWithDiffSexStudentsView,
@@ -7,7 +7,7 @@ from .create_views import (
     main as create_views_main
 )
 from .unload_results import PostgresClient, DataExporter, RoomAnalyticsService, main as unload_results_main
-from .logs import get_logger, main as get_logger_main
+from .logs import get_logger
 
 __all__ = [
     "Rooms", "Students",
@@ -18,5 +18,5 @@ __all__ = [
     "create_views_main",
     "unload_results_main",
     "PostgresClient", "DataExporter", "RoomAnalyticsService",
-    "get_logger", "get_logger_main"
+    "get_logger", "load_to_db_main"
 ]

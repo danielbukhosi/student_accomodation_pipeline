@@ -13,6 +13,7 @@ except ImportError:
 load_dotenv()
 logger = get_logger()
 
+
 class LoadToDb:                      #Parent class
    def __init__(self,file_path,con,cu,rows,sql,table_name,data):
       self.file_path = file_path
@@ -52,7 +53,7 @@ class Students(LoadToDb):
 
 
 def main() -> None:
-
+  logger = get_logger()
   user_name:str = input("Please Register a once-of username$ ")
   if user_name:
      print(f"Hello {user_name.strip()}!. Welcome to the ETL")

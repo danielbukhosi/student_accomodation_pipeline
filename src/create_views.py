@@ -10,6 +10,7 @@ except ImportError:
 load_dotenv()
 logger =  get_logger()
 
+
 class CreateViews:
   def __init__(self,con,cu,sql):
      self.con = con
@@ -39,6 +40,7 @@ class RoomsWithDiffSexStudentsView(CreateViews):
       super().create_views()
 
 def main()-> None:
+   logger =  get_logger()
    logger.info("Starting to Create views...")   
    # Named the following sql queries according to their chronological order above, could not come-up with any simple name :(
    sql_1: str = """                                     

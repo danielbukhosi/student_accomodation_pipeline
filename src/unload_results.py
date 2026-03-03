@@ -119,6 +119,7 @@ class RoomAnalyticsService:
 # =========================
 
 def main():
+    logger = get_logger()
     db = PostgresClient()
     db.connect()
 
