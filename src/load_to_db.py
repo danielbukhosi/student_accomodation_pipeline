@@ -5,13 +5,13 @@ import json
 from pathlib import Path
 
 try:
-    from .logs import load_to_db_log  # when imported as package
+    from .logs import get_logger  # when imported as package
 except ImportError:
-    from logs import load_to_db_log   # when run directly as script
+    from logs import get_logger   # when run directly as script
 
 
 load_dotenv()
-logger = load_to_db_log()
+logger = get_logger()
 
 class LoadToDb:                      #Parent class
    def __init__(self,file_path,con,cu,rows,sql,table_name,data):

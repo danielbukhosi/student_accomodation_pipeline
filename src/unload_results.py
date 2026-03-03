@@ -9,12 +9,12 @@ import xml.etree.ElementTree as ET
 import xml.dom.minidom as md
 
 try:
-    from .logs import unload_results_log # when imported as package
+    from .logs import get_logger # when imported as package
 except ImportError:
-    from logs import unload_results_log   # when run directly as script
+    from logs import get_logger   # when run directly as script
 
 load_dotenv()
-logger = unload_results_log()
+logger = get_logger()
 
 
 # =========================

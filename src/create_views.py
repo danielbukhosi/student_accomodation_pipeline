@@ -1,15 +1,14 @@
 import psycopg2
 from dotenv import load_dotenv
-from .logs import create_views_log
 import os
 
 try:
-    from .logs import create_views_log  # when imported as package
+    from .logs import get_logger  # when imported as package
 except ImportError:
-    from logs import create_views_log   # when run directly as script
+    from logs import get_logger   # when run directly as script
 
 load_dotenv()
-logger =  create_views_log()
+logger =  get_logger()
 
 class CreateViews:
   def __init__(self,con,cu,sql):
