@@ -36,7 +36,6 @@ class Rooms(LoadToDb):
          try:
             for row in self.rows:
                self.cu.execute(self.sql,row)
-               self.conn.commit()
          except Exception:
             logger.error(f"Insertion or Update into {self.table_name} table failed!",exc_info=True)
 
@@ -48,7 +47,6 @@ class Students(LoadToDb):
          try:
             for row in self.rows:
                self.cu.execute(self.sql,row)
-               self.conn.commit()
          except Exception:
             logger.error(f"Insertion or Update into {self.table_name} table failed!",exc_info=True)
 
@@ -111,6 +109,7 @@ def main() -> None:
   
   Rooms(rooms_filepath,conn,cur,rooms_rows,rooms_sql,rooms_table,data).load_data()
   Students(students_filepath,conn,cur,students_rows,students_sql,students_table,data).load_data()
+  conn.commit()
   cur.close()
   conn.close()
   logger.info("Data inserted/updated successfully to rooms and students table!✅")
