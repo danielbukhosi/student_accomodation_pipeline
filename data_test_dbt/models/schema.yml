@@ -1,0 +1,40 @@
+version: 2
+
+sources:
+ - name: StudentPipeline
+   schema: public
+   tables: 
+    - name: rooms
+      description: Running Data Qualityuality Tests on rooms Table
+      columns:
+       - name: room_id
+         tests:
+          - not_null
+          - unique
+       - name: name
+         tests:
+          - not_null
+    - name: students
+      description: Running Data Quality Tests on students Table
+      columns:
+       - name: student_id
+         tests:
+          - not_null
+          - unique
+       - name: name 
+         tests:
+          - not_null
+       - name: room_id
+         tests:
+          - not_null
+          - relationships:
+             to: source('StudentPipeline','rooms')
+             field: room_id
+       - name: sex
+         tests:
+           - not_null
+        
+
+           
+
+ 

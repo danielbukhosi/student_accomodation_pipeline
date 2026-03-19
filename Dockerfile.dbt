@@ -1,0 +1,10 @@
+FROM python:3.11-slim
+RUN pip install --no-cache-dir dbt-core dbt-postgres
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY data_test_dbt/ .
+CMD ["dbt","test"]

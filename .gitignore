@@ -1,0 +1,14 @@
+.venv
+.env
+logs
+create_tables_oldversion.env
+alembic.ini
+data_test_dbt/profiles.yml
+data_test_dbt/.user.yml
+src/.ruff_cache/
+src/unload_results2.py
+__pycache__/
+
+
+
+
